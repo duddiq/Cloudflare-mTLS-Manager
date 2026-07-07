@@ -111,7 +111,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                     type="text"
                     value={editCommonName}
                     onChange={e => setEditCommonName(e.target.value)}
-                    className="px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-850 border border-gray-300 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none w-64 md:w-80"
+                    className="px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none w-64 md:w-80"
                   />
                 </div>
               ) : (
@@ -136,7 +136,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                   setEditIssuedTo(certificate.issuedTo);
                   setIsEditing(true);
                 }} 
-                className="p-2 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition-colors"
+                className="p-2 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 title="Edit Local Label & Owner"
               >
                 <Edit2 className="w-5 h-5" />
