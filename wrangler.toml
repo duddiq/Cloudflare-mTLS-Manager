@@ -4,5 +4,5 @@ pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "mtls-db"
-database_id = "9c0878c8-eba5-4e8b-97b2-156824cb9cef"ss
+database_name = "mtls-db-preview"
+database_id = "a301fbf7-e335-472e-a7a1-83dd11d9950c"

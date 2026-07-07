@@ -12,13 +12,13 @@ function downloadFile(binaryData: string, filename: string) {
 
   const blob = new Blob([buffer], { type: 'application/x-pkcs12' });
   const url = URL.createObjectURL(blob);
-  
+
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  
+
   // Clean up
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
@@ -62,7 +62,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
     try {
       // 1. Generate Key Pair locally
       const keys = forge.pki.rsa.generateKeyPair(2048);
-      
+
       // 2. Generate CSR locally
       setStatusText('Generating Certificate Signing Request...');
       const csr = forge.pki.createCertificationRequest();
@@ -87,7 +87,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
       });
 
       const data = await res.json() as any;
-      
+
       if (!res.ok || !data.certificate) {
         throw new Error(data.error || 'Failed to create certificate');
       }
@@ -104,24 +104,24 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
         cert.validity.notBefore = new Date();
         cert.validity.notAfter = new Date();
         cert.validity.notAfter.setDate(cert.validity.notBefore.getDate() + validityDays);
-        
+
         const attrs = [{ name: 'commonName', value: commonName }];
         cert.setSubject(attrs);
         cert.setIssuer(attrs);
-        
+
         cert.sign(keys.privateKey, forge.md.sha256.create());
         certPem = forge.pki.certificateToPem(cert);
       }
 
       // 4. Generate PKCS#12 (.p12) file locally
       const certForge = forge.pki.certificateFromPem(certPem);
-      
+
       const p12Asn1 = forge.pkcs12.toPkcs12Asn1(keys.privateKey, [certForge], password, {
         algorithm: 'aes256'
       });
       const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
       const filename = `${commonName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.p12`;
-      
+
       downloadFile(p12Der, filename);
 
       onSuccess();
@@ -147,18 +147,18 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-955/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-900/50">
               {error}
             </div>
           )}
-          
+
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Common Name (CN)</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               value={commonName}
               onChange={e => setCommonName(e.target.value)}
@@ -171,8 +171,8 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
           {userRole === 'admin' && (
             <div className="space-y-1">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Issued To Email</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 value={issuedToEmail}
                 onChange={e => setIssuedToEmail(e.target.value)}
@@ -182,11 +182,11 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
               <p className="text-xs text-gray-550 dark:text-gray-450">The email address of the person this certificate is issued to.</p>
             </div>
           )}
-          
+
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">Validity (Days)</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               required
               min={1}
               max={3650}
@@ -200,8 +200,8 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">PKCS#12 Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-gray-400 dark:text-gray-505 absolute left-3 top-3" />
-              <input 
-                type="password" 
+              <input
+                type="password"
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -214,16 +214,16 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
 
           <div className="pt-4 flex flex-col gap-3">
             <div className="flex gap-3">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleClose}
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 font-medium bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
               >

@@ -119,9 +119,8 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                   <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-snug truncate max-w-xs md:max-w-md" title={certificate.commonName}>
                     {certificate.commonName}
                   </h2>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${
-                    certificate.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400'
-                  }`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-0.5 ${certificate.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400'
+                    }`}>
                     {certificate.status.charAt(0).toUpperCase() + certificate.status.slice(1)}
                   </span>
                 </>
@@ -130,12 +129,12 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
           </div>
           <div className="flex items-center gap-1.5 ml-2">
             {isAdmin && !isEditing && (
-              <button 
+              <button
                 onClick={() => {
                   setEditCommonName(certificate.commonName);
                   setEditIssuedTo(certificate.issuedTo);
                   setIsEditing(true);
-                }} 
+                }}
                 className="p-2 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition-colors"
                 title="Edit Local Label & Owner"
               >
@@ -305,9 +304,9 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                   </button>
                 )
               )}
-              
-              <button 
-                type="button" 
+
+              <button
+                type="button"
                 onClick={onClose}
                 className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-305 bg-white dark:bg-gray-855 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
               >

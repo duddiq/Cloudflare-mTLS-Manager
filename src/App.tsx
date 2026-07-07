@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ShieldCheck, Plus, Search, Trash2, Key, RefreshCcw, Users, User, Menu, X, UserCheck, Globe, Moon, Sun } from 'lucide-react';
+import { ShieldCheck, Plus, Search, Trash2, Key, RefreshCcw, Users, User, Menu, X, UserCheck, Globe, Moon, Sun, LogOut } from 'lucide-react';
 import { CreateCertificateModal } from './components/CreateCertificateModal';
 import { CertificateDetailsModal } from './components/CertificateDetailsModal';
 import type { Certificate } from './types';
@@ -33,7 +33,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
-  
+
   // Navigation, Sidebar & Filtering States
   const [activeTab, setActiveTab] = useState<'my-certs' | 'all-certs' | 'users' | 'hostnames'>('my-certs');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'revoked'>('all');
@@ -239,7 +239,7 @@ export default function App() {
     if (activeTab === 'my-certs' && currentUser) {
       if (c.issuedTo !== currentUser.email) return false;
     }
-    
+
     // 2. Filter by active/revoked status
     if (statusFilter !== 'all' && c.status !== statusFilter) return false;
 
@@ -254,16 +254,15 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-150 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900 selection:text-indigo-900 flex overflow-x-hidden">
       {/* Mobile Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden animate-in fade-in duration-200" 
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden animate-in fade-in duration-200"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Menu */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-screen transition-transform duration-300 ease-in-out shrink-0 md:static md:translate-x-0 md:h-screen md:sticky md:top-0 ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-screen transition-transform duration-300 ease-in-out shrink-0 md:static md:translate-x-0 md:h-screen md:sticky md:top-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}>
         {/* Sidebar Header */}
         <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -275,8 +274,8 @@ export default function App() {
               <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold tracking-wider uppercase">Zero Trust</p>
             </div>
           </div>
-          <button 
-            onClick={() => setIsSidebarOpen(false)} 
+          <button
+            onClick={() => setIsSidebarOpen(false)}
             className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-505 dark:hover:text-gray-300 dark:hover:bg-gray-800 rounded-lg md:hidden transition-colors"
           >
             <X className="w-5 h-5" />
@@ -293,11 +292,10 @@ export default function App() {
                 setActiveTab('my-certs');
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'my-certs' 
-                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none' 
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'my-certs'
+                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
-              }`}
+                }`}
             >
               <Key className="w-4 h-4 shrink-0" />
               My Certificates
@@ -313,11 +311,10 @@ export default function App() {
                   setActiveTab('all-certs');
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === 'all-certs' 
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none' 
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'all-certs'
+                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
-                }`}
+                  }`}
               >
                 <Users className="w-4 h-4 shrink-0" />
                 All Certificates
@@ -328,11 +325,10 @@ export default function App() {
                   setActiveTab('users');
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === 'users' 
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none' 
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'users'
+                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
-                }`}
+                  }`}
               >
                 <UserCheck className="w-4 h-4 shrink-0" />
                 Manage Users
@@ -343,11 +339,10 @@ export default function App() {
                   setActiveTab('hostnames');
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === 'hostnames' 
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none' 
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'hostnames'
+                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
-                }`}
+                  }`}
               >
                 <Globe className="w-4 h-4 shrink-0" />
                 mTLS Hostnames
@@ -366,12 +361,22 @@ export default function App() {
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" title={currentUser.email}>
                 {currentUser.email}
               </p>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                currentUser.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-450' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-455'
-              }`}>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${currentUser.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-450' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-455'
+                }`}>
                 {currentUser.role}
               </span>
             </div>
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to log out?')) {
+                  window.location.href = '/cdn-cgi/access/logout';
+                }
+              }}
+              className="p-2 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800/80 rounded-xl transition-all shrink-0"
+              title="Log Out"
+            >
+              <LogOut className="w-4.5 h-4.5" />
+            </button>
           </div>
         )}
       </aside>
@@ -381,7 +386,7 @@ export default function App() {
         {/* Top Header */}
         <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-30 shrink-0">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsSidebarOpen(true)}
               className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 rounded-xl md:hidden shrink-0 transition-colors"
             >
@@ -402,7 +407,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors border border-transparent dark:border-transparent"
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
@@ -410,7 +415,7 @@ export default function App() {
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
             {activeTab !== 'users' && activeTab !== 'hostnames' && (
-              <button 
+              <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm"
               >
@@ -429,7 +434,7 @@ export default function App() {
               {/* Toolbar */}
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Registered Accounts</h3>
-                <button 
+                <button
                   onClick={fetchUsers}
                   className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm font-medium"
                 >
@@ -475,9 +480,8 @@ export default function App() {
                               )}
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                                user.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                              }`}>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${user.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                }`}>
                                 {user.role === 'admin' ? 'Administrator' : 'User'}
                               </span>
                             </td>
@@ -514,8 +518,8 @@ export default function App() {
                 <form onSubmit={handleAddAssociation} className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
                     <Globe className="w-4 h-4 text-gray-400 dark:text-gray-505 absolute left-3 top-3" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. api.yourdomain.com"
                       value={newHostname}
                       onChange={e => setNewHostname(e.target.value)}
@@ -540,7 +544,7 @@ export default function App() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Associated Hostnames</h3>
-                  <button 
+                  <button
                     onClick={fetchAssociations}
                     className="flex items-center gap-2 text-gray-600 dark:text-gray-450 hover:text-gray-900 dark:hover:text-gray-205 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm font-medium"
                   >
@@ -589,7 +593,7 @@ export default function App() {
                                 {assoc.createdAt ? format(new Date(assoc.createdAt), 'MMM d, yyyy HH:mm') : 'N/A'}
                               </td>
                               <td className="px-6 py-4 text-right">
-                                <button 
+                                <button
                                   onClick={() => handleDeleteAssociation(assoc.hostname)}
                                   className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 hover:bg-red-50 dark:hover:bg-red-950/30 p-2 rounded-lg transition-colors"
                                   title="Remove Domain Association"
@@ -614,8 +618,8 @@ export default function App() {
                   {/* Search */}
                   <div className="relative w-full sm:w-80">
                     <Search className="w-4 h-4 text-gray-400 dark:text-gray-505 absolute left-3 top-3" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Search certificates..."
                       value={search}
                       onChange={e => setSearch(e.target.value)}
@@ -627,38 +631,35 @@ export default function App() {
                   <div className="flex items-center bg-gray-100 dark:bg-gray-900 p-1 rounded-xl shrink-0 border border-gray-200 dark:border-gray-800 w-fit">
                     <button
                       onClick={() => setStatusFilter('all')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        statusFilter === 'all' 
-                          ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm' 
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'all'
+                          ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
                           : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-350'
-                      }`}
+                        }`}
                     >
                       All
                     </button>
                     <button
                       onClick={() => setStatusFilter('active')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        statusFilter === 'active' 
-                          ? 'bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 shadow-sm' 
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'active'
+                          ? 'bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 shadow-sm'
                           : 'text-gray-500 hover:text-green-700 dark:hover:text-green-400'
-                      }`}
+                        }`}
                     >
                       Active
                     </button>
                     <button
                       onClick={() => setStatusFilter('revoked')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        statusFilter === 'revoked' 
-                          ? 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-450 shadow-sm' 
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'revoked'
+                          ? 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-450 shadow-sm'
                           : 'text-gray-500 hover:text-red-700 dark:hover:text-red-400'
-                      }`}
+                        }`}
                     >
                       Revoked
                     </button>
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={fetchCerts}
                   className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm font-medium"
                 >
@@ -698,8 +699,8 @@ export default function App() {
                         </tr>
                       ) : (
                         filteredCerts.map(cert => (
-                          <tr 
-                            key={cert.id} 
+                          <tr
+                            key={cert.id}
                             onClick={() => setSelectedCert(cert)}
                             className="hover:bg-gray-50/70 dark:hover:bg-gray-800/40 cursor-pointer select-none transition-colors"
                           >
@@ -712,9 +713,8 @@ export default function App() {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                cert.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400'
-                              }`}>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cert.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400'
+                                }`}>
                                 {cert.status.charAt(0).toUpperCase() + cert.status.slice(1)}
                               </span>
                             </td>
@@ -731,7 +731,7 @@ export default function App() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               {cert.status === 'active' ? (
-                                <button 
+                                <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleRevoke(cert.id);
@@ -742,7 +742,7 @@ export default function App() {
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               ) : (
-                                <button 
+                                <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleRestore(cert.id);
@@ -766,10 +766,10 @@ export default function App() {
         </main>
       </div>
 
-      <CreateCertificateModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchCerts} 
+      <CreateCertificateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchCerts}
         userRole={currentUser?.role || 'user'}
       />
       <CertificateDetailsModal
@@ -792,7 +792,7 @@ export default function App() {
               <div className="space-y-2 flex-1">
                 <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Remove Domain Association</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                  Are you sure you want to remove the hostname association for <span className="font-semibold text-gray-900 dark:text-gray-100">{assocToDelete}</span>? 
+                  Are you sure you want to remove the hostname association for <span className="font-semibold text-gray-900 dark:text-gray-100">{assocToDelete}</span>?
                   Cloudflare will stop validating client certificates for requests to this domain.
                 </p>
               </div>
