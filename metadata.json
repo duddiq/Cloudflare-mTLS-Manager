@@ -1,0 +1,8 @@
+{
+    "name": "mTLS Manager",
+    "description": "App to generate and manage Cloudflare mTLS client certificates for Zero Trust Access",
+    "requestFramePermissions": [],
+    "majorCapabilities": [
+        "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+    ]
+}

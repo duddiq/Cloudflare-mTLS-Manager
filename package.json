@@ -1,0 +1,41 @@
+{
+  "name": "mtls-manager",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/predev.js",
+    "dev": "node scripts/dev.js",
+    "dev:vite": "vite --port 5173 --host 0.0.0.0",
+    "build": "vite build",
+    "prestart": "npm run build",
+    "start": "node scripts/start.js",
+    "clean": "node scripts/clean.js",
+    "lint": "tsc --noEmit",
+    "db:setup": "npx wrangler d1 execute mtls-db --local --file=schema.sql"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "date-fns": "^4.4.0",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.27",
+    "lucide-react": "^0.546.0",
+    "node-forge": "^1.4.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "vite": "^6.2.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "@types/node": "^22.14.0",
+    "@types/node-forge": "^1.3.14",
+    "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.25.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3",
+    "wrangler": "^4.107.0"
+  }
+}
