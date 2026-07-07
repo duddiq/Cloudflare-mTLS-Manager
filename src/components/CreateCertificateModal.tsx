@@ -163,7 +163,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
               value={commonName}
               onChange={e => setCommonName(e.target.value)}
               placeholder="e.g. user-iphone-15"
-              className="w-full px-4 py-2 bg-white dark:bg-gray-850 border border-gray-305 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
             />
             <p className="text-xs text-gray-550 dark:text-gray-450">A unique identifier for this device or user.</p>
           </div>
@@ -177,7 +177,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
                 value={issuedToEmail}
                 onChange={e => setIssuedToEmail(e.target.value)}
                 placeholder="e.g. employee@company.com"
-                className="w-full px-4 py-2 bg-white dark:bg-gray-850 border border-gray-305 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
+                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
               />
               <p className="text-xs text-gray-550 dark:text-gray-450">The email address of the person this certificate is issued to.</p>
             </div>
@@ -192,21 +192,21 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
               max={3650}
               value={validityDays}
               onChange={e => setValidityDays(parseInt(e.target.value))}
-              className="w-full px-4 py-2 bg-white dark:bg-gray-850 border border-gray-305 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
             />
           </div>
 
           <div className="space-y-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">PKCS#12 Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-gray-400 dark:text-gray-505 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
               <input 
                 type="password" 
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Secure password for .p12 file"
-                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-850 border border-gray-305 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
               />
             </div>
             <p className="text-xs text-gray-550 dark:text-gray-450">You will need this password to install the certificate on your device.</p>
