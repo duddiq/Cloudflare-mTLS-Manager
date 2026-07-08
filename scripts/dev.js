@@ -6,8 +6,8 @@ console.log('Starting development servers...');
 const devVite = spawn('npm run dev:vite', { stdio: 'inherit', shell: true });
 
 // Spawn Wrangler Pages dev server
-const env = { ...process.env, WRANGLER_SEND_METRICS: 'false' };
-const wrangler = spawn('npx wrangler pages dev --proxy http://127.0.0.1:5173 --port 3000 --ip 0.0.0.0', { stdio: 'inherit', env, shell: true });
+const env = { ...process.env, WRANGLER_SEND_METRICS: 'false', NODE_OPTIONS: '--dns-result-order=ipv4first' };
+const wrangler = spawn('npx wrangler pages dev --proxy 5173 --port 3000 --ip 0.0.0.0', { stdio: 'inherit', env, shell: true });
 
 // Handle termination of child processes when the main process exits
 const cleanup = () => {
