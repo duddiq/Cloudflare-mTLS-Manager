@@ -251,7 +251,7 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-150 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900 selection:text-indigo-900 flex overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-150 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900 selection:text-indigo-900 dark:selection:text-indigo-100 flex overflow-x-hidden">
       {/* Mobile Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div
@@ -293,8 +293,8 @@ export default function App() {
                 setIsSidebarOpen(false);
               }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'my-certs'
-                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
+                ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
             >
               <Key className="w-4 h-4 shrink-0" />
@@ -312,8 +312,8 @@ export default function App() {
                   setIsSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'all-certs'
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
+                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
               >
                 <Users className="w-4 h-4 shrink-0" />
@@ -326,8 +326,8 @@ export default function App() {
                   setIsSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'users'
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
+                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
               >
                 <UserCheck className="w-4 h-4 shrink-0" />
@@ -340,8 +340,8 @@ export default function App() {
                   setIsSidebarOpen(false);
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'hostnames'
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
+                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
               >
                 <Globe className="w-4 h-4 shrink-0" />
@@ -361,7 +361,7 @@ export default function App() {
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" title={currentUser.email}>
                 {currentUser.email}
               </p>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${currentUser.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-450' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-455'
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${currentUser.role === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                 }`}>
                 {currentUser.role}
               </span>
@@ -493,7 +493,7 @@ export default function App() {
                                 value={user.role}
                                 disabled={user.email === currentUser?.email}
                                 onChange={(e) => handleRoleChange(user.email, e.target.value as 'admin' | 'user')}
-                                className="bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-800 dark:text-gray-250 focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-800 dark:text-gray-300 focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                               >
                                 <option value="user">Change to User</option>
                                 <option value="admin">Change to Admin</option>
@@ -517,13 +517,13 @@ export default function App() {
                 </div>
                 <form onSubmit={handleAddAssociation} className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
-                    <Globe className="w-4 h-4 text-gray-400 dark:text-gray-505 absolute left-3 top-3" />
+                    <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                     <input
                       type="text"
                       placeholder="e.g. api.yourdomain.com"
                       value={newHostname}
                       onChange={e => setNewHostname(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none text-sm"
+                      className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none text-sm"
                       required
                     />
                   </div>
@@ -632,8 +632,8 @@ export default function App() {
                     <button
                       onClick={() => setStatusFilter('all')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'all'
-                          ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-350'
+                        ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-350'
                         }`}
                     >
                       All
@@ -641,8 +641,8 @@ export default function App() {
                     <button
                       onClick={() => setStatusFilter('active')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'active'
-                          ? 'bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 shadow-sm'
-                          : 'text-gray-500 hover:text-green-700 dark:hover:text-green-400'
+                        ? 'bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 shadow-sm'
+                        : 'text-gray-500 hover:text-green-700 dark:hover:text-green-400'
                         }`}
                     >
                       Active
@@ -650,8 +650,8 @@ export default function App() {
                     <button
                       onClick={() => setStatusFilter('revoked')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'revoked'
-                          ? 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-450 shadow-sm'
-                          : 'text-gray-500 hover:text-red-700 dark:hover:text-red-400'
+                        ? 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-450 shadow-sm'
+                        : 'text-gray-500 hover:text-red-700 dark:hover:text-red-400'
                         }`}
                     >
                       Revoked
@@ -725,7 +725,7 @@ export default function App() {
                               {format(new Date(cert.expiresOn), 'MMM d, yyyy')}
                             </td>
                             <td className="px-6 py-4">
-                              <span className="font-mono text-xs text-gray-500 dark:text-gray-455 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                              <span className="font-mono text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                                 {cert.serialNumber || 'N/A'}
                               </span>
                             </td>

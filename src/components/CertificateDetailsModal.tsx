@@ -111,7 +111,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                     type="text"
                     value={editCommonName}
                     onChange={e => setEditCommonName(e.target.value)}
-                    className="px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-850 border border-gray-300 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none w-64 md:w-80"
+                    className="px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none w-64 md:w-80"
                   />
                 </div>
               ) : (
@@ -135,7 +135,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                   setEditIssuedTo(certificate.issuedTo);
                   setIsEditing(true);
                 }}
-                className="p-2 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition-colors"
+                className="p-2 text-gray-400 hover:text-indigo-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 title="Edit Local Label & Owner"
               >
                 <Edit2 className="w-5 h-5" />
@@ -151,7 +151,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Metadata Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-850">
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
               <User className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-450 uppercase tracking-wider">Issued To</p>
@@ -161,7 +161,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                       type="email"
                       value={editIssuedTo}
                       onChange={e => setEditIssuedTo(e.target.value)}
-                      className="w-full px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-850 border border-gray-300 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
+                      className="w-full px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none"
                     />
                   </div>
                 ) : (
@@ -172,20 +172,20 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-850">
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
               <Hash className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-455 uppercase tracking-wider">Serial Number</p>
-                <p className="font-mono text-gray-900 dark:text-gray-250 break-all select-all leading-tight text-xs sm:text-sm mt-1" title={certificate.serialNumber || 'N/A'}>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Serial Number</p>
+                <p className="font-mono text-gray-900 dark:text-gray-300 break-all select-all leading-tight text-xs sm:text-sm mt-1" title={certificate.serialNumber || 'N/A'}>
                   {certificate.serialNumber || 'N/A'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-850">
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
               <Calendar className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-455 uppercase tracking-wider">Validity Period</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Validity Period</p>
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                   {format(new Date(certificate.createdAt), 'MMM d, yyyy')} - {format(new Date(certificate.expiresOn), 'MMM d, yyyy')}
                 </p>
@@ -193,11 +193,11 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-850">
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
               <Fingerprint className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-455 uppercase tracking-wider">SHA-256 Fingerprint</p>
-                <p className="text-sm font-mono text-gray-900 dark:text-gray-250 break-all select-all leading-tight text-xs mt-1" title={certificate.fingerprintSha256 || 'N/A'}>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">SHA-256 Fingerprint</p>
+                <p className="text-sm font-mono text-gray-900 dark:text-gray-300 break-all select-all leading-tight text-xs mt-1" title={certificate.fingerprintSha256 || 'N/A'}>
                   {certificate.fingerprintSha256 || 'N/A'}
                 </p>
               </div>
@@ -205,12 +205,12 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
           </div>
 
           {/* Certificate ID */}
-          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-855 flex items-center justify-between">
+          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div className="flex gap-3 items-center min-w-0">
               <FileText className="w-5 h-5 text-indigo-500 shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-455 uppercase tracking-wider">Cloudflare Certificate ID</p>
-                <p className="text-sm font-mono text-gray-900 dark:text-gray-250 break-all select-all">{certificate.id}</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cloudflare Certificate ID</p>
+                <p className="text-sm font-mono text-gray-900 dark:text-gray-300 break-all select-all">{certificate.id}</p>
               </div>
             </div>
           </div>
@@ -222,14 +222,14 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
               <div className="flex gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-305 font-medium px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/45 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/45 transition-colors"
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-305 font-medium px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/45 transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/45 transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
                   Download .crt
@@ -259,7 +259,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                     setIsEditing(false);
                     setEditError('');
                   }}
-                  className="px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-305 bg-white dark:bg-gray-850 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl transition-all shadow-sm focus:outline-none"
+                  className="px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl transition-all shadow-sm focus:outline-none"
                 >
                   Cancel
                 </button>
@@ -308,7 +308,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-305 bg-white dark:bg-gray-855 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
               >
                 Close
               </button>
