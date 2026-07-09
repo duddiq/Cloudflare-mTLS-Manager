@@ -19,6 +19,7 @@ CREATE TABLE certificates (
   fingerprint_sha256 TEXT,
   serial_number TEXT,
   created_at TEXT NOT NULL,
+  expiry_notifications_sent TEXT,
   FOREIGN KEY (issued_to) REFERENCES users (email)
 );
 

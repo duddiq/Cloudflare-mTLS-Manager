@@ -17,6 +17,7 @@ export const certificates = sqliteTable("certificates", {
   fingerprintSha256: text("fingerprint_sha256"),
   serialNumber: text("serial_number"),
   createdAt: text("created_at").notNull(),
+  expiryNotificationsSent: text("expiry_notifications_sent"), // list of thresholds already sent
 });
 
 export const appMetadata = sqliteTable("app_metadata", {

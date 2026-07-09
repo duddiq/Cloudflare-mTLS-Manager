@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ShieldCheck, Plus, Search, Trash2, Key, RefreshCcw, Users, User, Menu, X, UserCheck, Globe, Moon, Sun, LogOut } from 'lucide-react';
+import { ShieldCheck, Plus, Search, Trash2, Key, RefreshCcw, Users, User, Menu, X, UserCheck, Globe, Moon, Sun, LogOut, Mail, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { CreateCertificateModal } from './components/CreateCertificateModal';
 import { CertificateDetailsModal } from './components/CertificateDetailsModal';
 import type { Certificate } from './types';
@@ -35,7 +35,7 @@ export default function App() {
   const [search, setSearch] = useState('');
 
   // Navigation, Sidebar & Filtering States
-  const [activeTab, setActiveTab] = useState<'my-certs' | 'all-certs' | 'users' | 'hostnames'>('my-certs');
+  const [activeTab, setActiveTab] = useState<'my-certs' | 'all-certs' | 'users' | 'hostnames' | 'email-settings'>('my-certs');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'revoked'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -50,6 +50,160 @@ export default function App() {
   const [isAddingAssoc, setIsAddingAssoc] = useState(false);
   const [assocError, setAssocError] = useState('');
   const [assocToDelete, setAssocToDelete] = useState<string | null>(null);
+
+  // Email settings states
+  const [emailConfig, setEmailConfig] = useState({
+    email_enabled: false,
+    email_provider: 'resend',
+    email_sender: '',
+    email_warning_days: '30,14,7',
+    has_api_key: false,
+  });
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [testRecipient, setTestRecipient] = useState('');
+  const [isConfigLoading, setIsConfigLoading] = useState(false);
+  const [isConfigSaving, setIsConfigSaving] = useState(false);
+  const [isConfigTesting, setIsConfigTesting] = useState(false);
+  const [isConfigTriggering, setIsConfigTriggering] = useState(false);
+  const [configSuccessMessage, setConfigSuccessMessage] = useState('');
+  const [configErrorMessage, setConfigErrorMessage] = useState('');
+
+  const fetchEmailConfig = async () => {
+    try {
+      setIsConfigLoading(true);
+      setConfigErrorMessage('');
+      const res = await fetch('/api/settings/email');
+      if (res.ok) {
+        const data = await res.json() as typeof emailConfig;
+        setEmailConfig(data);
+      } else {
+        const err = await res.json() as { error?: string };
+        setConfigErrorMessage(err.error || 'Failed to load email configurations.');
+      }
+    } catch (err) {
+      console.error(err);
+      setConfigErrorMessage('Failed to connect to email settings API.');
+    } finally {
+      setIsConfigLoading(false);
+    }
+  };
+
+  const handleSaveEmailConfig = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsConfigSaving(true);
+    setConfigSuccessMessage('');
+    setConfigErrorMessage('');
+    try {
+      const res = await fetch('/api/settings/email', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email_enabled: emailConfig.email_enabled,
+          email_provider: emailConfig.email_provider,
+          email_sender: emailConfig.email_sender,
+          email_warning_days: emailConfig.email_warning_days,
+          email_api_key: apiKeyInput || undefined,
+        })
+      });
+
+      if (res.ok) {
+        setConfigSuccessMessage('Email configurations saved successfully.');
+        setApiKeyInput('');
+        fetchEmailConfig();
+      } else {
+        const err = await res.json() as { error?: string };
+        setConfigErrorMessage(err.error || 'Failed to save email settings.');
+      }
+    } catch (err) {
+      console.error(err);
+      setConfigErrorMessage('Failed to save email settings due to network error.');
+    } finally {
+      setIsConfigSaving(false);
+    }
+  };
+
+  const handleTestEmailConfig = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!testRecipient) return;
+    setIsConfigTesting(true);
+    setConfigSuccessMessage('');
+    setConfigErrorMessage('');
+    try {
+      const res = await fetch('/api/settings/email/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          recipient: testRecipient,
+          email_provider: emailConfig.email_provider,
+          email_sender: emailConfig.email_sender,
+          email_api_key: apiKeyInput || undefined,
+        })
+      });
+
+      if (res.ok) {
+        setConfigSuccessMessage(`Test email sent successfully to ${testRecipient}.`);
+      } else {
+        const err = await res.json() as { error?: string };
+        setConfigErrorMessage(err.error || 'Failed to send test email.');
+      }
+    } catch (err) {
+      console.error(err);
+      setConfigErrorMessage('Failed to send test email due to network error.');
+    } finally {
+      setIsConfigTesting(false);
+    }
+  };
+
+  const handleTriggerEmailCheck = async () => {
+    if (!confirm('Are you sure you want to run the expiry check now? This will scan the DB and send warning emails for any certificate close to expiration.')) return;
+    setIsConfigTriggering(true);
+    setConfigSuccessMessage('');
+    setConfigErrorMessage('');
+    try {
+      const res = await fetch('/api/settings/email/trigger', {
+        method: 'POST'
+      });
+
+      if (res.ok) {
+        const data = await res.json() as { processed: number; sent: number; errors: string[] };
+        let msg = `Expiry check run successfully. Processed: ${data.processed}, Sent warnings: ${data.sent}.`;
+        if (data.errors.length > 0) {
+          msg += ` Errors: ${data.errors.length}. See console for details.`;
+          console.error(data.errors);
+        }
+        setConfigSuccessMessage(msg);
+      } else {
+        const err = await res.json() as { error?: string };
+        setConfigErrorMessage(err.error || 'Failed to trigger expiry check.');
+      }
+    } catch (err) {
+      console.error(err);
+      setConfigErrorMessage('Failed to trigger expiry check due to network error.');
+    } finally {
+      setIsConfigTriggering(false);
+    }
+  };
+
+  const toggleThreshold = (day: number) => {
+    const current = emailConfig.email_warning_days
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !isNaN(n));
+    let updated;
+    if (current.includes(day)) {
+      updated = current.filter((d) => d !== day);
+    } else {
+      updated = [...current, day];
+    }
+    setEmailConfig({
+      ...emailConfig,
+      email_warning_days: updated.sort((a, b) => b - a).join(','),
+    });
+  };
 
   const fetchCerts = async () => {
     try {
@@ -118,6 +272,8 @@ export default function App() {
       fetchUsers();
     } else if (activeTab === 'hostnames') {
       fetchAssociations();
+    } else if (activeTab === 'email-settings') {
+      fetchEmailConfig();
     }
   }, [activeTab]);
 
@@ -347,6 +503,20 @@ export default function App() {
                 <Globe className="w-4 h-4 shrink-0" />
                 mTLS Hostnames
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('email-settings');
+                  setIsSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'email-settings'
+                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 shadow-sm shadow-indigo-100/50 dark:shadow-none'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
+                  }`}
+              >
+                <Mail className="w-4 h-4 shrink-0" />
+                Email Settings
+              </button>
             </div>
           )}
         </div>
@@ -398,11 +568,13 @@ export default function App() {
                 {activeTab === 'all-certs' && 'All Certificates'}
                 {activeTab === 'users' && 'Manage Users'}
                 {activeTab === 'hostnames' && 'mTLS Hostnames'}
+                {activeTab === 'email-settings' && 'Email Settings'}
               </h2>
               <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                 {activeTab === 'users' && 'Administer access control lists and user roles'}
                 {activeTab === 'hostnames' && 'Configure which domains require mTLS client certificate verification'}
-                {activeTab !== 'users' && activeTab !== 'hostnames' && 'Manage device authentication credentials'}
+                {activeTab === 'email-settings' && 'Configure email provider and expiry reminder thresholds'}
+                {activeTab !== 'users' && activeTab !== 'hostnames' && activeTab !== 'email-settings' && 'Manage device authentication credentials'}
               </p>
             </div>
           </div>
@@ -414,7 +586,7 @@ export default function App() {
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
-            {activeTab !== 'users' && activeTab !== 'hostnames' && (
+            {activeTab !== 'users' && activeTab !== 'hostnames' && activeTab !== 'email-settings' && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm"
@@ -607,6 +779,235 @@ export default function App() {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === 'email-settings' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-300 max-w-5xl">
+              {/* Alert Banners */}
+              {(configSuccessMessage || configErrorMessage || isConfigLoading) && (
+                <div className="lg:col-span-3 space-y-3">
+                  {isConfigLoading && (
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 p-4 rounded-xl text-sm font-medium">
+                      <Loader2 className="w-5 h-5 shrink-0 animate-spin text-indigo-600 dark:text-indigo-400" />
+                      <div>Loading settings...</div>
+                    </div>
+                  )}
+                  {configSuccessMessage && (
+                    <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-400 p-4 rounded-xl text-sm font-medium">
+                      <Check className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <div>{configSuccessMessage}</div>
+                    </div>
+                  )}
+                  {configErrorMessage && (
+                    <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-955/20 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-455 p-4 rounded-xl text-sm font-medium">
+                      <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                      <div>{configErrorMessage}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Main settings form */}
+              <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm space-y-6">
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    Notification settings
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Configure connection settings for Resend to send client certificate expiration reminders.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSaveEmailConfig} className="space-y-5">
+                  {/* Enable Switch */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-gray-150 dark:border-gray-800">
+                    <div>
+                      <label className="text-sm font-bold text-gray-900 dark:text-gray-100 block">
+                        Enable notifications
+                      </label>
+                      <span className="text-[11px] text-gray-550 dark:text-gray-450 font-medium">
+                        Scan the database and email users before their certificates expire.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailConfig({ ...emailConfig, email_enabled: !emailConfig.email_enabled })}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${emailConfig.email_enabled ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'
+                        }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${emailConfig.email_enabled ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Provider Choice */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Email provider
+                    </label>
+                    <select
+                      value={emailConfig.email_provider}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, email_provider: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none text-sm font-medium transition-all"
+                    >
+                      <option value="resend">Resend (Recommended)</option>
+                    </select>
+                  </div>
+
+                  {/* API Key */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Resend API key
+                    </label>
+                    <input
+                      type="password"
+                      placeholder={emailConfig.has_api_key ? '••••••••••••••••••••••••••••••••' : 're_... (Enter API Key)'}
+                      value={apiKeyInput}
+                      onChange={(e) => setApiKeyInput(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none text-sm transition-all"
+                    />
+                    {emailConfig.has_api_key && !apiKeyInput && (
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                        ✓ API Key is configured. Fill this field only if you want to overwrite it.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sender Email */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Sender email (From)
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="e.g. no-reply@yourdomain.com"
+                      value={emailConfig.email_sender}
+                      onChange={(e) => setEmailConfig({ ...emailConfig, email_sender: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none text-sm transition-all"
+                      required
+                    />
+                    <p className="text-[10px] text-gray-400">
+                      Must be a domain verified in your Resend account, or <code>onboarding@resend.dev</code> for testing.
+                    </p>
+                  </div>
+
+                  {/* Warning Thresholds */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Warning thresholds
+                    </label>
+                    <div className="space-y-2">
+                      {[30, 14, 7].map((day) => {
+                        const isChecked = emailConfig.email_warning_days
+                          .split(',')
+                          .map((s) => parseInt(s.trim(), 10))
+                          .includes(day);
+                        return (
+                          <label
+                            key={day}
+                            className="flex items-center gap-3 p-3 rounded-xl border border-gray-150 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleThreshold(day)}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                            />
+                            <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              {day} days before expiration
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isConfigSaving || isConfigLoading}
+                    className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm disabled:opacity-50 w-full"
+                  >
+                    {isConfigSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving settings...
+                      </>
+                    ) : (
+                      'Save settings'
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              {/* Utility Panel */}
+              <div className="space-y-6">
+                {/* Test Email */}
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm space-y-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Send test email</h4>
+                    <p className="text-[11px] text-gray-550 dark:text-gray-400 mt-0.5">
+                      Verify your connection by sending a test message to a specified email address.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleTestEmailConfig} className="space-y-3">
+                    <input
+                      type="email"
+                      placeholder="recipient@example.com"
+                      value={testRecipient}
+                      onChange={(e) => setTestRecipient(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none text-xs transition-all"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={isConfigTesting || isConfigLoading}
+                      className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-850 dark:text-gray-205 px-4 py-2 rounded-xl text-xs font-semibold transition-all w-full disabled:opacity-50"
+                    >
+                      {isConfigTesting ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-600 dark:text-gray-400" />
+                          Sending test...
+                        </>
+                      ) : (
+                        'Send test'
+                      )}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Manual Execution */}
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm space-y-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Run manual check</h4>
+                    <p className="text-[11px] text-gray-505 dark:text-gray-450 mt-0.5">
+                      Instantly scan the database and dispatch reminder emails for expiring certificates.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleTriggerEmailCheck}
+                    disabled={isConfigTriggering || isConfigLoading || !emailConfig.email_enabled}
+                    className="flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-955/60 dark:text-indigo-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all w-full disabled:opacity-50"
+                  >
+                    {isConfigTriggering ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600 dark:text-indigo-400" />
+                        Running check...
+                      </>
+                    ) : (
+                      'Run expiry check'
+                    )}
+                  </button>
+                  {!emailConfig.email_enabled && (
+                    <p className="text-[10px] text-gray-400 text-center">
+                      * Enable notifications first to run manual checks.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
