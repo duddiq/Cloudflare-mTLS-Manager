@@ -29,17 +29,6 @@ app.use('*', async (c, next) => {
   const email = headerEmail || c.env.MOCK_USER_EMAIL || '';
   c.set('userEmail', email);
 
-  try {
-    await c.env.DB.batch([
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, role TEXT NOT NULL DEFAULT 'user', created_at TEXT NOT NULL);`),
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS certificates (id TEXT PRIMARY KEY, issued_to TEXT NOT NULL, common_name TEXT NOT NULL, validity_days INTEGER NOT NULL, certificate_pem TEXT NOT NULL, status TEXT NOT NULL, expires_on TEXT NOT NULL, fingerprint_sha256 TEXT, serial_number TEXT, created_at TEXT NOT NULL, FOREIGN KEY (issued_to) REFERENCES users (email));`),
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY, value TEXT);`),
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS hostname_associations (hostname TEXT PRIMARY KEY, mtls_certificate_id TEXT, created_at TEXT NOT NULL);`)
-    ]);
-  } catch (e) {
-    console.error('Failed to init db', e);
-  }
-
   const db = drizzle(c.env.DB);
   try {
     // Seed ADMIN_USER if specified

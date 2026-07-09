@@ -12,7 +12,9 @@
     "start": "node scripts/start.js",
     "clean": "node scripts/clean.js",
     "lint": "tsc --noEmit",
-    "db:setup": "npx wrangler d1 execute mtls-db --local --file=schema.sql"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "npx wrangler d1 migrations apply mtls-db-preview --local",
+    "db:setup": "npx wrangler d1 migrations apply mtls-db-preview --local"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
