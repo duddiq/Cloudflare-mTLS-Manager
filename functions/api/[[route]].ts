@@ -360,7 +360,7 @@ app.post('/certs/:id/restore', async (c) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          status: 'active'
+          reactivate: true
         })
       });
       if (!cfResponse.ok) {
@@ -375,6 +375,7 @@ app.post('/certs/:id/restore', async (c) => {
   const db = drizzle(c.env.DB);
   await db.update(certificates).set({ status: 'active' }).where(eq(certificates.id, id)).run();
 
+  return c.json({ success: true });
 });
 
 app.put('/certs/:id', async (c) => {
