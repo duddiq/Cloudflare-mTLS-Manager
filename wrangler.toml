@@ -1,15 +1,8 @@
 name = "cloudflare-mtls-manager"
-compatibility_date = "2024-03-20"
+compatibility_date = "2026-06-16"
 
-# Default binding (used for local development and preview deployments)
 [[d1_databases]]
-binding = "DB"
-database_name = "mtls-db-preview"
-database_id = "a301fbf7-e335-472e-a7a1-83dd11d9950c"
-
-# Production binding (picked up by Cloudflare Pages during production deployment)
-[env.production]
-[[env.production.d1_databases]]
 binding = "DB"
 database_name = "mtls-db"
 database_id = "9c0878c8-eba5-4e8b-97b2-156824cb9cef"
+preview-database_id = "a301fbf7-e335-472e-a7a1-83dd11d9950c"
