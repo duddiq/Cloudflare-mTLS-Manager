@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ShieldCheck, Plus, Search, Trash2, Key, RefreshCcw, Users, User, Menu, X, UserCheck, Globe, Moon, Sun, LogOut, Mail, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { ShieldCheck, Plus, Search, Trash2, Key, RefreshCcw, Users, User, Menu, X, UserCheck, Globe, Moon, Sun, LogOut, Mail, Check, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { CreateCertificateModal } from './components/CreateCertificateModal';
 import { CertificateDetailsModal } from './components/CertificateDetailsModal';
 import type { Certificate } from './types';
@@ -50,6 +50,22 @@ export default function App() {
   const [isAddingAssoc, setIsAddingAssoc] = useState(false);
   const [assocError, setAssocError] = useState('');
   const [assocToDelete, setAssocToDelete] = useState<string | null>(null);
+  const [assocSuccessMessage, setAssocSuccessMessage] = useState('');
+
+  // Security rule state
+  const [securityRuleStatus, setSecurityRuleStatus] = useState<{
+    rulesetId?: string;
+    ruleId?: string;
+    configured?: boolean;
+    ruleDetails?: {
+      expression?: string;
+      enabled?: boolean;
+      description?: string;
+    } | null;
+  } | null>(null);
+  const [isRuleStatusLoading, setIsRuleStatusLoading] = useState(false);
+  const [isRuleSyncing, setIsRuleSyncing] = useState(false);
+  const [ruleSyncMessage, setRuleSyncMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
 
   // Email settings states
   const [emailConfig, setEmailConfig] = useState({
@@ -262,6 +278,46 @@ export default function App() {
     }
   };
 
+  const fetchSecurityRuleStatus = async () => {
+    try {
+      setIsRuleStatusLoading(true);
+      const res = await fetch('/api/settings/security-rule');
+      if (res.ok) {
+        const data = await res.json() as typeof securityRuleStatus;
+        setSecurityRuleStatus(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch security rule status:', err);
+    } finally {
+      setIsRuleStatusLoading(false);
+    }
+  };
+
+  const handleManualRuleSync = async () => {
+    setIsRuleSyncing(true);
+    setRuleSyncMessage(null);
+    try {
+      const res = await fetch('/api/settings/security-rule/sync', { method: 'POST' });
+      const data = await res.json() as { success: boolean; error?: string; created?: boolean };
+      if (data.success) {
+        setRuleSyncMessage({
+          type: 'success',
+          text: data.created
+            ? 'Security rule created and synced successfully.'
+            : 'Security rule synced successfully.'
+        });
+        fetchSecurityRuleStatus();
+      } else {
+        setRuleSyncMessage({ type: 'error', text: data.error || 'Failed to sync security rule.' });
+      }
+    } catch (err) {
+      console.error(err);
+      setRuleSyncMessage({ type: 'error', text: 'Network error while syncing security rule.' });
+    } finally {
+      setIsRuleSyncing(false);
+    }
+  };
+
   useEffect(() => {
     fetchCerts();
     fetchUser();
@@ -272,6 +328,7 @@ export default function App() {
       fetchUsers();
     } else if (activeTab === 'hostnames') {
       fetchAssociations();
+      fetchSecurityRuleStatus();
     } else if (activeTab === 'email-settings') {
       fetchEmailConfig();
     }
@@ -342,6 +399,8 @@ export default function App() {
     if (!newHostname.trim()) return;
     setIsAddingAssoc(true);
     setAssocError('');
+    setAssocSuccessMessage('');
+    setRuleSyncMessage(null);
     try {
       const res = await fetch('/api/hostname-associations', {
         method: 'POST',
@@ -351,8 +410,23 @@ export default function App() {
         body: JSON.stringify({ hostname: newHostname.trim() })
       });
       if (res.ok) {
+        const data = await res.json() as { success: boolean; ruleSync?: { success: boolean; error?: string; created?: boolean } };
         setNewHostname('');
         fetchAssociations();
+
+        // Show rule sync feedback
+        if (data.ruleSync?.success) {
+          setAssocSuccessMessage(
+            data.ruleSync.created
+              ? 'Hostname added. Security rule was created and synced.'
+              : 'Hostname added and security rule updated.'
+          );
+          fetchSecurityRuleStatus();
+        } else if (data.ruleSync?.error && data.ruleSync.error !== 'Skipped') {
+          setAssocError(`Hostname added, but security rule sync failed: ${data.ruleSync.error}`);
+        } else {
+          setAssocSuccessMessage('Hostname added successfully.');
+        }
       } else {
         const errData = await res.json() as { error?: string };
         setAssocError(errData.error || 'Failed to add hostname association.');
@@ -371,12 +445,25 @@ export default function App() {
 
   const confirmDeleteAssociation = async () => {
     if (!assocToDelete) return;
+    setAssocSuccessMessage('');
+    setRuleSyncMessage(null);
     try {
       const res = await fetch(`/api/hostname-associations/${encodeURIComponent(assocToDelete)}`, {
         method: 'DELETE'
       });
       if (res.ok) {
+        const data = await res.json() as { success: boolean; ruleSync?: { success: boolean; error?: string } };
         fetchAssociations();
+
+        // Show rule sync feedback
+        if (data.ruleSync?.success) {
+          setAssocSuccessMessage('Hostname removed and security rule updated.');
+          fetchSecurityRuleStatus();
+        } else if (data.ruleSync?.error && data.ruleSync.error !== 'Skipped') {
+          setAssocError(`Hostname removed, but security rule sync failed: ${data.ruleSync.error}`);
+        } else {
+          setAssocSuccessMessage('Hostname removed successfully.');
+        }
       } else {
         const errData = await res.json() as { error?: string };
         alert(errData.error || 'Failed to remove hostname association.');
@@ -710,6 +797,12 @@ export default function App() {
                 {assocError && (
                   <p className="text-xs text-red-600 font-semibold">{assocError}</p>
                 )}
+                {assocSuccessMessage && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                    <Check className="w-3.5 h-3.5 shrink-0" />
+                    {assocSuccessMessage}
+                  </div>
+                )}
               </div>
 
               {/* Associations List Table */}
@@ -780,6 +873,112 @@ export default function App() {
                     </table>
                   </div>
                 </div>
+              </div>
+
+              {/* Security Rule Status Card */}
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                      securityRuleStatus?.configured && securityRuleStatus?.ruleDetails?.enabled
+                        ? 'bg-emerald-100 dark:bg-emerald-950/40'
+                        : securityRuleStatus?.configured
+                          ? 'bg-amber-100 dark:bg-amber-950/40'
+                          : 'bg-gray-100 dark:bg-gray-800'
+                    }`}>
+                      <Shield className={`w-5 h-5 ${
+                        securityRuleStatus?.configured && securityRuleStatus?.ruleDetails?.enabled
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : securityRuleStatus?.configured
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                      }`} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">WAF Security Rule</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Automatically blocks requests without valid mTLS client certificates
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {securityRuleStatus?.configured && securityRuleStatus?.ruleDetails?.enabled && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                        Active
+                      </span>
+                    )}
+                    {securityRuleStatus?.configured && securityRuleStatus?.ruleDetails && !securityRuleStatus?.ruleDetails?.enabled && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
+                        Disabled
+                      </span>
+                    )}
+                    {!securityRuleStatus?.configured && !isRuleStatusLoading && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        Not Configured
+                      </span>
+                    )}
+                    <button
+                      onClick={handleManualRuleSync}
+                      disabled={isRuleSyncing}
+                      className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold disabled:opacity-50"
+                    >
+                      <RefreshCcw className={`w-3.5 h-3.5 ${isRuleSyncing ? 'animate-spin' : ''}`} />
+                      {isRuleSyncing ? 'Syncing...' : 'Sync Rule'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sync Messages */}
+                {ruleSyncMessage && (
+                  <div className={`flex items-center gap-2 p-3 rounded-xl text-xs font-medium ${
+                    ruleSyncMessage.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-400'
+                      : ruleSyncMessage.type === 'warning'
+                        ? 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-400'
+                        : 'bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-400'
+                  }`}>
+                    {ruleSyncMessage.type === 'success' ? (
+                      <Check className="w-4 h-4 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                    )}
+                    {ruleSyncMessage.text}
+                  </div>
+                )}
+
+                {/* Rule Details */}
+                {isRuleStatusLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Loading rule status...
+                  </div>
+                ) : securityRuleStatus?.configured && securityRuleStatus?.ruleDetails ? (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Rule Expression</p>
+                      <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-800 rounded-lg p-3">
+                        <code className="text-xs text-gray-700 dark:text-gray-300 font-mono break-all leading-relaxed">
+                          {securityRuleStatus.ruleDetails.expression}
+                        </code>
+                      </div>
+                    </div>
+                    <div className="flex gap-6">
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Ruleset ID</p>
+                        <span className="font-mono text-[11px] text-gray-500 dark:text-gray-400">{securityRuleStatus.rulesetId}</span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Rule ID</p>
+                        <span className="font-mono text-[11px] text-gray-500 dark:text-gray-400">{securityRuleStatus.ruleId}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : !securityRuleStatus?.configured ? (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    No security rule configured yet. Click <strong>Sync Rule</strong> to auto-discover or create one.
+                    The rule will be automatically managed when you add or remove hostnames.
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : activeTab === 'email-settings' ? (

@@ -18,6 +18,12 @@ A sleek, self-hosted web dashboard to manage Cloudflare mTLS (mutual TLS) Client
 *   **Hostname Associations**:
     *   Easily bind mTLS client certificates to specific hostnames (subdomains) within your Cloudflare Zone to enforce mutual TLS access.
     *   Add and remove domain associations directly from the dashboard.
+*   **Automatic WAF Security Rule Management**:
+    *   Automatically creates and updates a Cloudflare WAF Custom Rule that blocks requests without a valid mTLS client certificate.
+    *   Rule expression is synced whenever hostnames are added or removed — no manual curl/API calls needed.
+    *   Auto-discovers the Custom Rules ruleset via the Cloudflare phase entrypoint API; creates a new rule if none exists.
+    *   Managed rule is identified by the `[mTLS Manager]` description marker.
+    *   Security Rule Status Card on the Hostnames page shows rule state, expression, and provides a manual "Sync Rule" button.
 *   **Access & Role-Based Permissions**:
     *   Seamless integration with **Cloudflare Access** (authenticates requests via the JWT `cf-access-authenticated-user-email` header).
     *   **Administrator Role**: Manage all certificates, change user roles, and update hostname associations.
@@ -127,7 +133,7 @@ This project is optimized for native deployment via **Cloudflare Pages**.
 In your Pages project settings, go to **Settings** -> **Variables and secrets**. Define the following variables under **Production**:
 *   `ENVIRONMENT`: `production` (strictly enforces headers authentication and disables mock fallback).
 *   `CLOUDFLARE_ZONE_ID`: The Zone ID for your target domain.
-*   `CLOUDFLARE_API_TOKEN`: Cloudflare API token with `Zone.ClientCertificates` permissions.
+*   `CLOUDFLARE_API_TOKEN`: Cloudflare API token with `Zone.SSL and Certificates` and `Zone.Zone WAF` (write) permissions.
 *   `ADMIN_USER`: The email address of the main administrator.
 *   `ENCRYPTION_SECRET`: Secret key used to encrypt third-party provider API keys (e.g. Resend API key) stored in D1 database.
 
