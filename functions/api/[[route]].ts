@@ -6,6 +6,8 @@ import { drizzle } from 'drizzle-orm/d1';
 import { certificates, users, appMetadata, hostnameAssociations } from '../../src/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import forge from 'node-forge';
+import { encryptText } from './utils/crypto';
+import { checkAndSendExpiryNotifications, sendTestNotification } from './utils/notificationService';
 
 type Env = {
   DB: D1Database;
@@ -14,6 +16,7 @@ type Env = {
   MOCK_USER_EMAIL?: string;
   ADMIN_USER?: string;
   ENVIRONMENT?: string;
+  ENCRYPTION_SECRET?: string;
 };
 
 const app = new Hono<{ Bindings: Env; Variables: { userEmail: string } }>().basePath('/api');
@@ -28,17 +31,6 @@ app.use('*', async (c, next) => {
 
   const email = headerEmail || c.env.MOCK_USER_EMAIL || '';
   c.set('userEmail', email);
-
-  try {
-    await c.env.DB.batch([
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, role TEXT NOT NULL DEFAULT 'user', created_at TEXT NOT NULL);`),
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS certificates (id TEXT PRIMARY KEY, issued_to TEXT NOT NULL, common_name TEXT NOT NULL, validity_days INTEGER NOT NULL, certificate_pem TEXT NOT NULL, status TEXT NOT NULL, expires_on TEXT NOT NULL, fingerprint_sha256 TEXT, serial_number TEXT, created_at TEXT NOT NULL, FOREIGN KEY (issued_to) REFERENCES users (email));`),
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY, value TEXT);`),
-      c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS hostname_associations (hostname TEXT PRIMARY KEY, mtls_certificate_id TEXT, created_at TEXT NOT NULL);`)
-    ]);
-  } catch (e) {
-    console.error('Failed to init db', e);
-  }
 
   const db = drizzle(c.env.DB);
   try {
@@ -164,6 +156,14 @@ app.use('*', async (c, next) => {
 
   await next();
 });
+
+// Admin validation helper
+async function isAdmin(c: any, db: any): Promise<boolean> {
+  const email = c.get('userEmail');
+  if (!email) return false;
+  const user = await db.select().from(users).where(eq(users.email, email)).get();
+  return user?.role === 'admin';
+}
 
 app.get('/me', async (c) => {
   const email = c.get('userEmail');
@@ -380,12 +380,10 @@ app.post('/certs/:id/restore', async (c) => {
 
 app.put('/certs/:id', async (c) => {
   const id = c.req.param('id');
-  const email = c.get('userEmail');
   const db = drizzle(c.env.DB);
 
   // Verify admin authorization
-  const user = await db.select().from(users).where(eq(users.email, email)).get();
-  if (!user || user.role !== 'admin') {
+  if (!(await isAdmin(c, db))) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
@@ -411,12 +409,10 @@ app.put('/certs/:id', async (c) => {
 });
 
 app.get('/users', async (c) => {
-  const email = c.get('userEmail');
   const db = drizzle(c.env.DB);
 
   // Verify admin authorization
-  const user = await db.select().from(users).where(eq(users.email, email)).get();
-  if (!user || user.role !== 'admin') {
+  if (!(await isAdmin(c, db))) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
@@ -430,8 +426,7 @@ app.put('/users/:targetEmail/role', async (c) => {
   const db = drizzle(c.env.DB);
 
   // Verify admin authorization
-  const user = await db.select().from(users).where(eq(users.email, loggedInEmail)).get();
-  if (!user || user.role !== 'admin') {
+  if (!(await isAdmin(c, db))) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
@@ -450,12 +445,10 @@ app.put('/users/:targetEmail/role', async (c) => {
 });
 
 app.get('/hostname-associations', async (c) => {
-  const email = c.get('userEmail');
   const db = drizzle(c.env.DB);
 
   // Verify admin authorization
-  const user = await db.select().from(users).where(eq(users.email, email)).get();
-  if (!user || user.role !== 'admin') {
+  if (!(await isAdmin(c, db))) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
@@ -547,12 +540,10 @@ app.get('/hostname-associations', async (c) => {
 });
 
 app.post('/hostname-associations', async (c) => {
-  const email = c.get('userEmail');
   const db = drizzle(c.env.DB);
 
   // Verify admin authorization
-  const user = await db.select().from(users).where(eq(users.email, email)).get();
-  if (!user || user.role !== 'admin') {
+  if (!(await isAdmin(c, db))) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
@@ -637,12 +628,10 @@ app.post('/hostname-associations', async (c) => {
 });
 
 app.delete('/hostname-associations/:hostname', async (c) => {
-  const email = c.get('userEmail');
   const db = drizzle(c.env.DB);
 
   // Verify admin authorization
-  const user = await db.select().from(users).where(eq(users.email, email)).get();
-  if (!user || user.role !== 'admin') {
+  if (!(await isAdmin(c, db))) {
     return c.json({ error: 'Unauthorized' }, 403);
   }
 
@@ -711,6 +700,116 @@ app.delete('/hostname-associations/:hostname', async (c) => {
   await db.delete(hostnameAssociations).where(eq(hostnameAssociations.hostname, hostname)).run();
 
   return c.json({ success: true });
+});
+
+app.get('/settings/email', async (c) => {
+  const db = drizzle(c.env.DB);
+  if (!(await isAdmin(c, db))) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const metadataList = await db.select().from(appMetadata).all();
+  const config: Record<string, string> = {};
+  for (const meta of metadataList) {
+    config[meta.key] = meta.value || '';
+  }
+
+  return c.json({
+    email_enabled: config.email_enabled === 'true',
+    email_provider: config.email_provider || 'resend',
+    email_sender: config.email_sender || 'onboarding@resend.dev',
+    email_warning_days: config.email_warning_days || '30,14,7',
+    has_api_key: !!config.email_api_key,
+  });
+});
+
+app.put('/settings/email', async (c) => {
+  const db = drizzle(c.env.DB);
+  if (!(await isAdmin(c, db))) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const {
+    email_enabled,
+    email_provider,
+    email_sender,
+    email_api_key,
+    email_warning_days,
+  } = await c.req.json() as {
+    email_enabled: boolean;
+    email_provider: string;
+    email_sender: string;
+    email_api_key?: string;
+    email_warning_days: string;
+  };
+
+  const valuesToSet = [
+    { key: 'email_enabled', value: email_enabled ? 'true' : 'false' },
+    { key: 'email_provider', value: email_provider || 'resend' },
+    { key: 'email_sender', value: email_sender || 'onboarding@resend.dev' },
+    { key: 'email_warning_days', value: email_warning_days || '30,14,7' },
+  ];
+
+  if (email_api_key) {
+    const secret = c.env.ENCRYPTION_SECRET;
+    if (!secret) {
+      return c.json({ error: 'Internal Configuration Error: Encryption secret is missing' }, 500);
+    }
+    const encryptedKey = await encryptText(email_api_key, secret);
+    valuesToSet.push({ key: 'email_api_key', value: encryptedKey });
+  }
+
+  for (const item of valuesToSet) {
+    await db.insert(appMetadata).values({
+      key: item.key,
+      value: item.value
+    }).onConflictDoUpdate({
+      target: appMetadata.key,
+      set: { value: item.value }
+    }).run();
+  }
+
+  return c.json({ success: true });
+});
+
+app.post('/settings/email/test', async (c) => {
+  const db = drizzle(c.env.DB);
+  if (!(await isAdmin(c, db))) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const { recipient, email_provider, email_sender, email_api_key } = await c.req.json() as {
+    recipient: string;
+    email_provider?: string;
+    email_sender?: string;
+    email_api_key?: string;
+  };
+
+  if (!recipient) {
+    return c.json({ error: 'Recipient email is required' }, 400);
+  }
+
+  const testConfig: any = {};
+  if (email_provider) testConfig.provider = email_provider;
+  if (email_sender) testConfig.sender = email_sender;
+  if (email_api_key) testConfig.apiKey = email_api_key;
+
+  const testRes = await sendTestNotification(db, c.env, recipient, testConfig);
+  if (testRes.success) {
+    return c.json({ success: true, messageId: testRes.messageId });
+  } else {
+    return c.json({ error: testRes.error || 'Failed to send test email' }, 500);
+  }
+});
+
+app.post('/settings/email/trigger', async (c) => {
+  const db = drizzle(c.env.DB);
+  if (!(await isAdmin(c, db))) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const res = await checkAndSendExpiryNotifications(db, c.env);
+  return c.json(res);
 });
 
 export const onRequest = handle(app);

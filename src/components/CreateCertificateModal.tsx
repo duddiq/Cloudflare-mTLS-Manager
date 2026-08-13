@@ -150,7 +150,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-955/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-900/50">
+            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-900/50">
               {error}
             </div>
           )}
@@ -165,7 +165,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
               placeholder="e.g. user-iphone-15"
               className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
             />
-            <p className="text-xs text-gray-550 dark:text-gray-450">A unique identifier for this device or user.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">A unique identifier for this device or user.</p>
           </div>
 
           {userRole === 'admin' && (
@@ -179,7 +179,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
                 placeholder="e.g. employee@company.com"
                 className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
               />
-              <p className="text-xs text-gray-550 dark:text-gray-450">The email address of the person this certificate is issued to.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">The email address of the person this certificate is issued to.</p>
             </div>
           )}
 
@@ -209,7 +209,7 @@ export function CreateCertificateModal({ isOpen, onClose, onSuccess, userRole }:
                 className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all outline-none"
               />
             </div>
-            <p className="text-xs text-gray-550 dark:text-gray-450">You will need this password to install the certificate on your device.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">You will need this password to install the certificate on your device.</p>
           </div>
 
           <div className="pt-4 flex flex-col gap-3">

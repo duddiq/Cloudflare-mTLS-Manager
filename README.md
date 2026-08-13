@@ -25,6 +25,12 @@ A sleek, self-hosted web dashboard to manage Cloudflare mTLS (mutual TLS) Client
     *   Dedicated Admin Control Panel for user role assignment.
 *   **Automated Cloudflare API Sync**:
     *   Periodically queries Cloudflare API client certificate lists to automatically sync and reconcile local D1 Database records with the cloud state.
+*   **Automated Expiration & Email Notifications**:
+    *   Integrated with **Resend** to send email alerts before client certificates expire.
+    *   Configurable warning thresholds (e.g., 30, 14, and 7 days prior to expiration).
+    *   Admin controls to test email delivery, manually trigger expiration checks, and toggle notifications.
+    *   Secure storage of provider API keys encrypted at rest using AES via `ENCRYPTION_SECRET`.
+    *   Includes a dedicated **Cloudflare Workers Cron Trigger** for automated background database scans.
 *   **Fail-Safe Development Mode**:
     *   Built-in simulation/mock environment allows fully offline development and testing of frontend and API handlers without requiring active Cloudflare API credentials.
 
@@ -38,7 +44,8 @@ A sleek, self-hosted web dashboard to manage Cloudflare mTLS (mutual TLS) Client
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) | Curated dark mode aesthetics and responsive layout. |
 | **Backend API** | [Hono](https://hono.dev/) | Light, fast web framework running on [Cloudflare Pages Functions](https://pages.cloudflare.com/). |
 | **Database** | [Cloudflare D1](https://developers.cloudflare.com/d1/) | Serverless SQL database (SQLite-based) with [Drizzle ORM](https://orm.drizzle.team/). |
-| **Cryptography** | [node-forge](https://github.com/digitalbazaar/forge) | Client-side CSR parsing and certificate validation. |
+| **Email Service** | [Resend](https://resend.com/) & Cloudflare Cron Worker | Transactional email notification service paired with scheduled background workers. |
+| **Cryptography** | [node-forge](https://github.com/digitalbazaar/forge) & Web Crypto API | Client-side CSR parsing and server-side AES key encryption. |
 
 ---
 
@@ -122,6 +129,7 @@ In your Pages project settings, go to **Settings** -> **Variables and secrets**.
 *   `CLOUDFLARE_ZONE_ID`: The Zone ID for your target domain.
 *   `CLOUDFLARE_API_TOKEN`: Cloudflare API token with `Zone.ClientCertificates` permissions.
 *   `ADMIN_USER`: The email address of the main administrator.
+*   `ENCRYPTION_SECRET`: Secret key used to encrypt third-party provider API keys (e.g. Resend API key) stored in D1 database.
 
 ---
 
