@@ -407,7 +407,7 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-150 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900 selection:text-indigo-900 dark:selection:text-indigo-100 flex overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900 selection:text-indigo-900 dark:selection:text-indigo-100 flex overflow-x-hidden">
       {/* Mobile Sidebar Backdrop Overlay */}
       {isSidebarOpen && (
         <div
@@ -432,7 +432,7 @@ export default function App() {
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-505 dark:hover:text-gray-300 dark:hover:bg-gray-800 rounded-lg md:hidden transition-colors"
+            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-gray-800 rounded-lg md:hidden transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -461,7 +461,7 @@ export default function App() {
           {/* Admin Section */}
           {currentUser?.role === 'admin' && (
             <div className="space-y-1">
-              <p className="text-[11px] font-bold text-gray-400 dark:text-gray-505 uppercase tracking-wider px-2 mb-2">Admin Space</p>
+              <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-2 mb-2">Admin Space</p>
               <button
                 onClick={() => {
                   setActiveTab('all-certs');
@@ -605,7 +605,7 @@ export default function App() {
             <div className="space-y-6">
               {/* Toolbar */}
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Registered Accounts</h3>
+                <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Registered Accounts</h3>
                 <button
                   onClick={fetchUsers}
                   className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm font-medium"
@@ -715,10 +715,10 @@ export default function App() {
               {/* Associations List Table */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-505 uppercase tracking-wider">Associated Hostnames</h3>
+                  <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Associated Hostnames</h3>
                   <button
                     onClick={fetchAssociations}
-                    className="flex items-center gap-2 text-gray-600 dark:text-gray-450 hover:text-gray-900 dark:hover:text-gray-205 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm font-medium"
+                    className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-sm font-medium"
                   >
                     <RefreshCcw className="w-4 h-4" />
                     Refresh
@@ -757,7 +757,7 @@ export default function App() {
                                 {assoc.hostname}
                               </td>
                               <td className="px-6 py-4">
-                                <span className="font-mono text-xs text-gray-500 dark:text-gray-450 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                <span className="font-mono text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                                   {assoc.mtls_certificate_id || 'Cloudflare Managed CA'}
                                 </span>
                               </td>
@@ -800,7 +800,7 @@ export default function App() {
                     </div>
                   )}
                   {configErrorMessage && (
-                    <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-955/20 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-455 p-4 rounded-xl text-sm font-medium">
+                    <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-400 p-4 rounded-xl text-sm font-medium">
                       <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />
                       <div>{configErrorMessage}</div>
                     </div>
@@ -822,13 +822,13 @@ export default function App() {
 
                 <form onSubmit={handleSaveEmailConfig} className="space-y-5">
                   {/* Enable Switch */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-gray-150 dark:border-gray-800">
+                  <div className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-800">
                     <div>
                       <label className="text-sm font-bold text-gray-900 dark:text-gray-100 block">
                         Enable notifications
                       </label>
-                      <span className="text-[11px] text-gray-550 dark:text-gray-450 font-medium">
-                        Scan the database and email users before their certificates expire.
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                        Scan the database and notify users before their certificates expire.
                       </span>
                     </div>
                     <button
@@ -909,7 +909,7 @@ export default function App() {
                         return (
                           <label
                             key={day}
-                            className="flex items-center gap-3 p-3 rounded-xl border border-gray-150 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20 cursor-pointer transition-colors"
+                            className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20 cursor-pointer transition-colors"
                           >
                             <input
                               type="checkbox"
@@ -949,7 +949,7 @@ export default function App() {
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm space-y-4">
                   <div>
                     <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Send test email</h4>
-                    <p className="text-[11px] text-gray-550 dark:text-gray-400 mt-0.5">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                       Verify your connection by sending a test message to a specified email address.
                     </p>
                   </div>
@@ -966,7 +966,7 @@ export default function App() {
                     <button
                       type="submit"
                       disabled={isConfigTesting || isConfigLoading}
-                      className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-850 dark:text-gray-205 px-4 py-2 rounded-xl text-xs font-semibold transition-all w-full disabled:opacity-50"
+                      className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-xl text-xs font-semibold transition-all w-full disabled:opacity-50"
                     >
                       {isConfigTesting ? (
                         <>
@@ -984,7 +984,7 @@ export default function App() {
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm space-y-4">
                   <div>
                     <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Run manual check</h4>
-                    <p className="text-[11px] text-gray-505 dark:text-gray-450 mt-0.5">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                       Instantly scan the database and dispatch reminder emails for expiring certificates.
                     </p>
                   </div>
@@ -992,7 +992,7 @@ export default function App() {
                   <button
                     onClick={handleTriggerEmailCheck}
                     disabled={isConfigTriggering || isConfigLoading || !emailConfig.email_enabled}
-                    className="flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-955/60 dark:text-indigo-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all w-full disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/60 dark:text-indigo-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all w-full disabled:opacity-50"
                   >
                     {isConfigTriggering ? (
                       <>
@@ -1018,7 +1018,7 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-1">
                   {/* Search */}
                   <div className="relative w-full sm:w-80">
-                    <Search className="w-4 h-4 text-gray-400 dark:text-gray-505 absolute left-3 top-3" />
+                    <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                     <input
                       type="text"
                       placeholder="Search certificates..."
@@ -1034,7 +1034,7 @@ export default function App() {
                       onClick={() => setStatusFilter('all')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'all'
                         ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-350'
+                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
                         }`}
                     >
                       All
@@ -1051,7 +1051,7 @@ export default function App() {
                     <button
                       onClick={() => setStatusFilter('revoked')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${statusFilter === 'revoked'
-                        ? 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-450 shadow-sm'
+                        ? 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 shadow-sm'
                         : 'text-gray-500 hover:text-red-700 dark:hover:text-red-400'
                         }`}
                     >
@@ -1093,7 +1093,7 @@ export default function App() {
                       ) : filteredCerts.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                            <Key className="w-12 h-12 text-gray-305 dark:text-gray-600 mx-auto mb-3" />
+                            <Key className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                             <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">No certificates found</p>
                             <p className="text-sm">Create a new certificate to restrict access to your applications.</p>
                           </td>

@@ -154,7 +154,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
               <User className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-450 uppercase tracking-wider">Issued To</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Issued To</p>
                 {isEditing ? (
                   <div className="mt-1">
                     <input
@@ -189,7 +189,7 @@ export function CertificateDetailsModal({ isOpen, onClose, certificate, onRevoke
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                   {format(new Date(certificate.createdAt), 'MMM d, yyyy')} - {format(new Date(certificate.expiresOn), 'MMM d, yyyy')}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-450 mt-0.5">({certificate.validityDays} days total)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">({certificate.validityDays} days total)</p>
               </div>
             </div>
 

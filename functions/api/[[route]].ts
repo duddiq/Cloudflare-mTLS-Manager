@@ -742,11 +742,6 @@ app.put('/settings/email', async (c) => {
     email_warning_days: string;
   };
 
-  const secret = c.env.ENCRYPTION_SECRET;
-  if (!secret) {
-    return c.json({ error: 'Internal Configuration Error: Encryption secret is missing' }, 500);
-  }
-
   const valuesToSet = [
     { key: 'email_enabled', value: email_enabled ? 'true' : 'false' },
     { key: 'email_provider', value: email_provider || 'resend' },
@@ -755,6 +750,10 @@ app.put('/settings/email', async (c) => {
   ];
 
   if (email_api_key) {
+    const secret = c.env.ENCRYPTION_SECRET;
+    if (!secret) {
+      return c.json({ error: 'Internal Configuration Error: Encryption secret is missing' }, 500);
+    }
     const encryptedKey = await encryptText(email_api_key, secret);
     valuesToSet.push({ key: 'email_api_key', value: encryptedKey });
   }
