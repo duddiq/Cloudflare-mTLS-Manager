@@ -17,6 +17,8 @@ type Env = {
   ADMIN_USER?: string;
   ENVIRONMENT?: string;
   ENCRYPTION_SECRET?: string;
+  CLOUDFLARE_MTLS_RULESET_ID?: string;
+  CLOUDFLARE_MTLS_RULE_ID?: string;
 };
 
 const app = new Hono<{ Bindings: Env; Variables: { userEmail: string } }>().basePath('/api');
@@ -163,6 +165,189 @@ async function isAdmin(c: any, db: any): Promise<boolean> {
   if (!email) return false;
   const user = await db.select().from(users).where(eq(users.email, email)).get();
   return user?.role === 'admin';
+}
+
+// mTLS Security Rule description marker used to identify our managed rule
+const MTLS_RULE_DESCRIPTION = '[mTLS Manager] Enforce mTLS authentication';
+
+/**
+ * Syncs the mTLS security rule in the Cloudflare WAF Custom Rules phase.
+ * - Discovers the ruleset via phase entrypoint
+ * - Finds existing rule by description marker or creates a new one
+ * - Updates the rule expression to match all current hostnames
+ * - Disables the rule when no hostnames remain
+ */
+async function syncMtlsSecurityRule(
+  db: ReturnType<typeof drizzle>,
+  env: Env
+): Promise<{ success: boolean; error?: string; created?: boolean; ruleId?: string }> {
+  const zoneId = env.CLOUDFLARE_ZONE_ID;
+  const apiToken = env.CLOUDFLARE_API_TOKEN;
+
+  if (!zoneId || !apiToken) {
+    return { success: false, error: 'Cloudflare credentials not configured' };
+  }
+
+  try {
+    // 1. Read all current hostnames from DB
+    const allAssocs = await db.select().from(hostnameAssociations).all();
+    const hostnames = allAssocs.map(a => a.hostname);
+
+    // 2. Build the expression
+    const hostnamesExpr = hostnames.map(h => `"${h}"`).join(' ');
+    const expression = hostnames.length > 0
+      ? `(not cf.tls_client_auth.cert_verified or cf.tls_client_auth.cert_revoked) and http.host in {${hostnamesExpr}}`
+      : '(not cf.tls_client_auth.cert_verified or cf.tls_client_auth.cert_revoked) and http.host in {"_placeholder_.invalid"}';
+    const shouldBeEnabled = hostnames.length > 0;
+
+    // 3. Try to get cached IDs from app_metadata (or env vars as fallback)
+    const cachedRulesetMeta = await db.select().from(appMetadata).where(eq(appMetadata.key, 'mtls_ruleset_id')).get();
+    const cachedRuleMeta = await db.select().from(appMetadata).where(eq(appMetadata.key, 'mtls_rule_id')).get();
+    let rulesetId = cachedRulesetMeta?.value || env.CLOUDFLARE_MTLS_RULESET_ID || '';
+    let ruleId = cachedRuleMeta?.value || env.CLOUDFLARE_MTLS_RULE_ID || '';
+
+    // 4. If we have cached IDs, try to PATCH directly
+    if (rulesetId && ruleId) {
+      const patchRes = await fetch(
+        `https://api.cloudflare.com/client/v4/zones/${zoneId}/rulesets/${rulesetId}/rules/${ruleId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            description: MTLS_RULE_DESCRIPTION,
+            expression,
+            action: 'block',
+            enabled: shouldBeEnabled
+          })
+        }
+      );
+
+      if (patchRes.ok) {
+        console.log('SecurityRule: Successfully updated existing rule via cached IDs.');
+        return { success: true, created: false, ruleId };
+      }
+
+      // If 404, the cached IDs are stale — clear them and fall through to discovery
+      const status = patchRes.status;
+      console.warn(`SecurityRule: PATCH with cached IDs failed (status ${status}). Falling back to discovery.`);
+      rulesetId = '';
+      ruleId = '';
+    }
+
+    // 5. Discover via phase entrypoint
+    const entrypointRes = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${zoneId}/rulesets/phases/http_request_firewall_custom/entrypoint`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (entrypointRes.ok) {
+      const entrypointData = await entrypointRes.json() as any;
+      const ruleset = entrypointData.result;
+      rulesetId = ruleset.id;
+
+      // Search for our rule by description marker
+      const existingRule = (ruleset.rules || []).find(
+        (r: any) => r.description && r.description.includes('[mTLS Manager]')
+      );
+
+      if (existingRule) {
+        ruleId = existingRule.id;
+        console.log(`SecurityRule: Found existing rule ${ruleId} in ruleset ${rulesetId}. Updating...`);
+
+        // PATCH the found rule
+        const patchRes = await fetch(
+          `https://api.cloudflare.com/client/v4/zones/${zoneId}/rulesets/${rulesetId}/rules/${ruleId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              description: MTLS_RULE_DESCRIPTION,
+              expression,
+              action: 'block',
+              enabled: shouldBeEnabled
+            })
+          }
+        );
+
+        if (!patchRes.ok) {
+          const errText = await patchRes.text();
+          console.error('SecurityRule: Failed to update found rule:', errText);
+          return { success: false, error: `Failed to update security rule: ${errText}` };
+        }
+      } else {
+        // 6. No existing rule found — create a new one
+        console.log(`SecurityRule: No existing mTLS rule found in ruleset ${rulesetId}. Creating...`);
+
+        const createRes = await fetch(
+          `https://api.cloudflare.com/client/v4/zones/${zoneId}/rulesets/${rulesetId}/rules`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              description: MTLS_RULE_DESCRIPTION,
+              expression,
+              action: 'block',
+              enabled: shouldBeEnabled,
+              position: { index: 1 }
+            })
+          }
+        );
+
+        if (!createRes.ok) {
+          const errText = await createRes.text();
+          console.error('SecurityRule: Failed to create rule:', errText);
+          return { success: false, error: `Failed to create security rule: ${errText}` };
+        }
+
+        const createData = await createRes.json() as any;
+        // The response returns the full ruleset; find our newly created rule
+        const newRule = (createData.result?.rules || []).find(
+          (r: any) => r.description && r.description.includes('[mTLS Manager]')
+        );
+        ruleId = newRule?.id || '';
+        console.log(`SecurityRule: Created new rule ${ruleId}.`);
+      }
+    } else if (entrypointRes.status === 404) {
+      // No custom rules exist yet for this zone — we need to create a ruleset + rule
+      // This happens when the zone has never had a custom WAF rule.
+      // We cannot create a phase entrypoint directly; instead, we create a ruleset.
+      console.log('SecurityRule: No custom rules phase entrypoint found. This zone has no custom rules yet.');
+      return { success: false, error: 'No WAF Custom Rules ruleset found for this zone. Please create at least one custom rule in the Cloudflare Dashboard first, then retry.' };
+    } else {
+      const errText = await entrypointRes.text();
+      console.error('SecurityRule: Failed to get phase entrypoint:', errText);
+      return { success: false, error: `Failed to discover WAF ruleset: ${errText}` };
+    }
+
+    // 7. Cache the discovered/created IDs
+    if (rulesetId) {
+      await db.insert(appMetadata).values({ key: 'mtls_ruleset_id', value: rulesetId })
+        .onConflictDoUpdate({ target: appMetadata.key, set: { value: rulesetId } }).run();
+    }
+    if (ruleId) {
+      await db.insert(appMetadata).values({ key: 'mtls_rule_id', value: ruleId })
+        .onConflictDoUpdate({ target: appMetadata.key, set: { value: ruleId } }).run();
+    }
+
+    return { success: true, created: !ruleId, ruleId };
+  } catch (e: any) {
+    console.error('SecurityRule: Unexpected error during sync:', e);
+    return { success: false, error: `Unexpected error: ${e.message || e}` };
+  }
 }
 
 app.get('/me', async (c) => {
@@ -624,7 +809,16 @@ app.post('/hostname-associations', async (c) => {
     set: { mtlsCertificateId: mtls_certificate_id || null }
   }).run();
 
-  return c.json({ success: true });
+  // Sync the mTLS security rule (non-blocking: hostname is saved regardless)
+  let ruleSync: { success: boolean; error?: string; created?: boolean } = { success: false, error: 'Skipped' };
+  if (hasCredentials) {
+    ruleSync = await syncMtlsSecurityRule(db, c.env);
+    if (!ruleSync.success) {
+      console.warn('SecurityRule: Sync failed after adding hostname:', ruleSync.error);
+    }
+  }
+
+  return c.json({ success: true, ruleSync });
 });
 
 app.delete('/hostname-associations/:hostname', async (c) => {
@@ -699,7 +893,16 @@ app.delete('/hostname-associations/:hostname', async (c) => {
   // Delete from SQLite
   await db.delete(hostnameAssociations).where(eq(hostnameAssociations.hostname, hostname)).run();
 
-  return c.json({ success: true });
+  // Sync the mTLS security rule (non-blocking: hostname is deleted regardless)
+  let ruleSync: { success: boolean; error?: string; created?: boolean } = { success: false, error: 'Skipped' };
+  if (hasCredentials) {
+    ruleSync = await syncMtlsSecurityRule(db, c.env);
+    if (!ruleSync.success) {
+      console.warn('SecurityRule: Sync failed after deleting hostname:', ruleSync.error);
+    }
+  }
+
+  return c.json({ success: true, ruleSync });
 });
 
 app.get('/settings/email', async (c) => {
@@ -810,6 +1013,67 @@ app.post('/settings/email/trigger', async (c) => {
 
   const res = await checkAndSendExpiryNotifications(db, c.env);
   return c.json(res);
+});
+
+app.get('/settings/security-rule', async (c) => {
+  const db = drizzle(c.env.DB);
+  if (!(await isAdmin(c, db))) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const rulesetMeta = await db.select().from(appMetadata).where(eq(appMetadata.key, 'mtls_ruleset_id')).get();
+  const ruleMeta = await db.select().from(appMetadata).where(eq(appMetadata.key, 'mtls_rule_id')).get();
+  const rulesetId = rulesetMeta?.value || c.env.CLOUDFLARE_MTLS_RULESET_ID || '';
+  const ruleId = ruleMeta?.value || c.env.CLOUDFLARE_MTLS_RULE_ID || '';
+
+  let ruleDetails: { expression?: string; enabled?: boolean; description?: string } | null = null;
+
+  const zoneId = c.env.CLOUDFLARE_ZONE_ID;
+  const apiToken = c.env.CLOUDFLARE_API_TOKEN;
+
+  if (zoneId && apiToken && rulesetId && ruleId) {
+    try {
+      const res = await fetch(
+        `https://api.cloudflare.com/client/v4/zones/${zoneId}/rulesets/${rulesetId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      if (res.ok) {
+        const data = await res.json() as any;
+        const rule = (data.result?.rules || []).find((r: any) => r.id === ruleId);
+        if (rule) {
+          ruleDetails = {
+            expression: rule.expression,
+            enabled: rule.enabled,
+            description: rule.description
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch security rule details:', e);
+    }
+  }
+
+  return c.json({
+    rulesetId,
+    ruleId,
+    configured: !!(rulesetId && ruleId),
+    ruleDetails
+  });
+});
+
+app.post('/settings/security-rule/sync', async (c) => {
+  const db = drizzle(c.env.DB);
+  if (!(await isAdmin(c, db))) {
+    return c.json({ error: 'Unauthorized' }, 403);
+  }
+
+  const result = await syncMtlsSecurityRule(db, c.env);
+  return c.json(result);
 });
 
 export const onRequest = handle(app);
